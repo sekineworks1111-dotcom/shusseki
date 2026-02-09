@@ -13,6 +13,16 @@ const AdminDashboard = ({ members, setMembers }) => {
     // State for QR Modal
     const [showQrFor, setShowQrFor] = useState(null);
 
+    // State for Delete Confirmation Modal
+    const [memberToDelete, setMemberToDelete] = useState(null);
+
+    // State for Photo Upload
+    const fileInputRef = useRef(null);
+    const [uploadingMemberId, setUploadingMemberId] = useState(null);
+
+    // State for Drag and Drop
+    const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+
     const handleUrlChange = (e) => setGasUrlState(e.target.value);
 
     const saveGasUrl = () => {
@@ -22,7 +32,30 @@ const AdminDashboard = ({ members, setMembers }) => {
     };
 
     const handlePhotoUpload = (memberId) => {
-        alert("写真アップロード機能はサーバー連携が必要です。\n現在はデモとして機能しません。");
+        setUploadingMemberId(memberId);
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && uploadingMemberId) {
+            // Check file size (e.g., limit to 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('ファイルサイズが大きすぎます (2MB以下にしてください)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                updateMemberField(uploadingMemberId, 'photoUrl', reader.result);
+                setUploadingMemberId(null);
+                // Reset input
+                e.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const updateMemberField = (id, field, value) => {
@@ -48,11 +81,45 @@ const AdminDashboard = ({ members, setMembers }) => {
         setMembers(prev => [newMember, ...prev]);
     };
 
-    const deleteMember = (id) => {
-        if (window.confirm('本当にこのメンバーを削除しますか？\nこの操作は取り消せません。')) {
-            setMembers(prev => prev.filter(m => m.id !== id));
+    const confirmDelete = (member) => {
+        setMemberToDelete(member);
+    };
+
+    const executeDelete = () => {
+        if (memberToDelete) {
+            setMembers(prev => prev.filter(m => m.id !== memberToDelete.id));
+            setMemberToDelete(null);
         }
     };
+
+    // Drag and Drop Handlers
+    const onDragStart = (e, index) => {
+        setDraggedItemIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+        // Ghost image usually handled by browser, but we can customize if needed
+    };
+
+    const onDragOver = (e, index) => {
+        e.preventDefault(); // Necessary to allow dropping
+        e.dataTransfer.dropEffect = "move";
+    };
+
+    const onDrop = (e, dropIndex) => {
+        e.preventDefault();
+        if (draggedItemIndex === null || draggedItemIndex === dropIndex) return;
+
+        const newMembers = [...members];
+        const draggedItem = newMembers[draggedItemIndex];
+
+        // Remove from old position
+        newMembers.splice(draggedItemIndex, 1);
+        // Insert at new position
+        newMembers.splice(dropIndex, 0, draggedItem);
+
+        setMembers(newMembers);
+        setDraggedItemIndex(null);
+    };
+
 
     // Generate LINE Deep Link
     // Format: https://line.me/R/oaMessage/@BOT_ID/?text=reg:{memberId}
@@ -67,6 +134,15 @@ const AdminDashboard = ({ members, setMembers }) => {
 
     return (
         <div className="admin-dashboard" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto', paddingBottom: '100px' }}>
+            {/* Hidden File Input */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*"
+                onChange={handleFileChange}
+            />
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h2>管理画面</h2>
                 <button onClick={() => window.location.href = '/'} className="btn-cancel" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -131,6 +207,9 @@ const AdminDashboard = ({ members, setMembers }) => {
                     <button onClick={addMember} className="btn-present" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }}>
                         <Plus size={18} /> メンバーを追加
                     </button>
+                    <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
+                        ※リストやカードをドラッグ＆ドロップして並び替えができます。
+                    </p>
                 </div>
 
                 {viewMode === 'list' ? (
@@ -148,10 +227,30 @@ const AdminDashboard = ({ members, setMembers }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {members.map(member => (
-                                    <tr key={member.id} style={{ borderBottom: '1px solid #eee' }}>
+                                {members.map((member, index) => (
+                                    <tr
+                                        key={member.id}
+                                        draggable
+                                        onDragStart={(e) => onDragStart(e, index)}
+                                        onDragOver={(e) => onDragOver(e, index)}
+                                        onDrop={(e) => onDrop(e, index)}
+                                        style={{
+                                            borderBottom: '1px solid #eee',
+                                            opacity: draggedItemIndex === index ? 0.5 : 1,
+                                            cursor: 'grab',
+                                            background: draggedItemIndex === index ? '#f0f0f0' : 'white'
+                                        }}
+                                    >
                                         <td style={{ padding: '0.5rem' }}>
-                                            <img src={member.photoUrl} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                                            <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+                                                <img src={member.photoUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                                <button
+                                                    onClick={() => handlePhotoUpload(member.id)}
+                                                    style={{ position: 'absolute', bottom: -5, right: -5, background: 'white', border: '1px solid #ccc', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
+                                                >
+                                                    <User size={10} />
+                                                </button>
+                                            </div>
                                         </td>
                                         <td style={{ padding: '0.5rem' }}>
                                             <input
@@ -229,7 +328,7 @@ const AdminDashboard = ({ members, setMembers }) => {
                                                 <button onClick={() => setShowQrFor(member)} className="btn-time" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
                                                     <QrCode size={14} /> 連携QR
                                                 </button>
-                                                <button onClick={() => deleteMember(member.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center', background: '#ffebee', color: '#c62828', border: '1px solid #ffcdd2', borderRadius: '4px', cursor: 'pointer' }}>
+                                                <button onClick={() => confirmDelete(member)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center', background: '#ffebee', color: '#c62828', border: '1px solid #ffcdd2', borderRadius: '4px', cursor: 'pointer' }}>
                                                     <Trash2 size={14} /> 削除
                                                 </button>
                                             </div>
@@ -242,8 +341,25 @@ const AdminDashboard = ({ members, setMembers }) => {
                 ) : (
                     /* Grid View */
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                        {members.map(member => (
-                            <div key={member.id} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '1rem', background: '#f9f9f9', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {members.map((member, index) => (
+                            <div
+                                key={member.id}
+                                draggable
+                                onDragStart={(e) => onDragStart(e, index)}
+                                onDragOver={(e) => onDragOver(e, index)}
+                                onDrop={(e) => onDrop(e, index)}
+                                style={{
+                                    border: '1px solid #eee',
+                                    borderRadius: '8px',
+                                    padding: '1rem',
+                                    background: draggedItemIndex === index ? '#f0f0f0' : '#f9f9f9',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.5rem',
+                                    opacity: draggedItemIndex === index ? 0.5 : 1,
+                                    cursor: 'grab'
+                                }}
+                            >
                                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                     <div style={{ position: 'relative' }}>
                                         <img src={member.photoUrl} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
@@ -329,8 +445,34 @@ const AdminDashboard = ({ members, setMembers }) => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            {memberToDelete && (
+                <div className="modal-overlay" onClick={() => setMemberToDelete(null)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '350px' }}>
+                        <h3 style={{ marginBottom: '1rem', color: '#c62828' }}>メンバー削除</h3>
+                        <p style={{ marginBottom: '1rem' }}>
+                            <strong>{memberToDelete.name}</strong> を削除してもよろしいですか？
+                        </p>
+                        <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: '#666' }}>
+                            この操作は取り消せません。
+                        </p>
+                        <div className="modal-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                            <button className="btn-cancel" onClick={() => setMemberToDelete(null)}>
+                                キャンセル
+                            </button>
+                            <button
+                                className="btn-present"
+                                onClick={executeDelete}
+                                style={{ background: '#c62828', border: 'none' }}
+                            >
+                                削除する
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
-
 export default AdminDashboard;

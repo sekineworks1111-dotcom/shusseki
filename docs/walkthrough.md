@@ -13,7 +13,8 @@ Verified the following:
 - "Notification Method" column added to member list.
 - Selecting "Both" or "Email" reveals two email input fields.
 - "Add Member" button successfully adds a new row.
-- "Delete" button successfully removes a member.
+- "Delete" button opens a custom confirmation modal.
+- Clicking "削除する" in the modal successfully removes a member.
 
 **Screenshot: Admin Dashboard List View**
 ![Admin Dashboard List View](/c:/Users/freem/.gemini/antigravity/brain/bdd0a28a-3576-4c2c-b886-ad577edb5205/attendance_registration_success_1770647788156.png)
