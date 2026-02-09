@@ -179,14 +179,16 @@ const AdminDashboard = ({ members, setMembers }) => {
                                             </select>
                                         </td>
                                         <td style={{ padding: '0.5rem' }}>
-                                            <div style={{ marginBottom: '0.5rem' }}>
-                                                <input
-                                                    value={member.lineUserId}
-                                                    onChange={(e) => updateMemberField(member.id, 'lineUserId', e.target.value)}
-                                                    placeholder="LINE ID (Uxxxxxxxx...)"
-                                                    style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '0.2rem' }}
-                                                />
-                                            </div>
+                                            {(member.notificationMethod === 'line' || member.notificationMethod === 'both') && (
+                                                <div style={{ marginBottom: '0.5rem' }}>
+                                                    <input
+                                                        value={member.lineUserId}
+                                                        onChange={(e) => updateMemberField(member.id, 'lineUserId', e.target.value)}
+                                                        placeholder="LINE ID (Uxxxxxxxx...)"
+                                                        style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '0.2rem' }}
+                                                    />
+                                                </div>
+                                            )}
                                             {(member.notificationMethod === 'email' || member.notificationMethod === 'both') && (
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                                                     <input
