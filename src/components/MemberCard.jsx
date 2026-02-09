@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { User, Check, Clock, X } from 'lucide-react';
-import VolleyballIcon from './VolleyballIcon';
 
 const MemberCard = ({ member, onClick }) => {
     const getStatusIcon = () => {
         switch (member.status) {
             case 'present':
-                return <VolleyballIcon size={40} color="white" strokeWidth={2} />;
+                return <Check size={40} color="white" strokeWidth={3} />;
             case 'leaving_early':
                 return <Clock size={40} color="white" strokeWidth={3} />;
             case 'left':
