@@ -6,6 +6,7 @@
 | **Member Management** | ✅ Implemented | Added "Add Member" and "Delete Member" functionality (with custom modal). |
 | **Photo Upload** | ✅ Implemented | Click photo to upload new image (saved locally). |
 | **Reordering** | ✅ Implemented | Drag and drop members to change order in List/Grid views. |
+| **Custom Icon** | ✅ Implemented | Replaced check mark with Volleyball icon for "Present" status. |
 | **Backend Integration** | ✅ Updated | Updated sending logic to include notification method and emails. |
 
 ## verification Results
