@@ -3,7 +3,9 @@
 | Feature | Status | Description |
 | :--- | :--- | :--- |
 | **Email Notifications** | ✅ Implemented | Added "Email" and "Both" options. Added 2 email address fields. |
-| **Member Management** | ✅ Implemented | Added "Add Member" and "Delete Member" functionality. |
+| **Member Management** | ✅ Implemented | Added "Add Member" and "Delete Member" functionality (with custom modal). |
+| **Photo Upload** | ✅ Implemented | Click photo to upload new image (saved locally). |
+| **Reordering** | ✅ Implemented | Drag and drop members to change order in List/Grid views. |
 | **Backend Integration** | ✅ Updated | Updated sending logic to include notification method and emails. |
 
 ## verification Results
@@ -15,6 +17,8 @@ Verified the following:
 - "Add Member" button successfully adds a new row.
 - "Delete" button opens a custom confirmation modal.
 - Clicking "削除する" in the modal successfully removes a member.
+- Upload icon allows selecting a photo file.
+- Dragging member rows/cards reorders the list correctly.
 
 **Screenshot: Admin Dashboard List View**
 ![Admin Dashboard List View](/c:/Users/freem/.gemini/antigravity/brain/bdd0a28a-3576-4c2c-b886-ad577edb5205/attendance_registration_success_1770647788156.png)
