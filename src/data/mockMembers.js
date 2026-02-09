@@ -6,6 +6,9 @@ export const mockMembers = Array.from({ length: 30 }, (_, i) => ({
   status: 'pending', // 'pending', 'present', 'leaving_early', 'left'
   leavingTime: null,
   lineUserId: '', // New field for LINE ID
+  notificationMethod: 'line', // 'line', 'email', 'both'
+  email1: '',
+  email2: '',
   notifyEntry: true, // Default to true
   notifyExit: true, // Default to true
   remarks: '', // For any other notes

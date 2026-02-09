@@ -4,7 +4,7 @@ export const setGasUrl = (url) => {
     localStorage.setItem('gas_url', url);
 };
 
-export const logAttendance = async (memberId, memberName, status, leavingTime = null) => {
+export const logAttendance = async (member, status, leavingTime = null) => {
     const url = getGasUrl();
     if (!url) {
         console.warn("GAS URL not set. Data will not be sent.");
@@ -14,8 +14,12 @@ export const logAttendance = async (memberId, memberName, status, leavingTime = 
     // Payload structure for GAS
     const payload = {
         type: 'attendance',
-        memberId,
-        memberName,
+        memberId: member.id,
+        memberName: member.name,
+        lineUserId: member.lineUserId || '',
+        notificationMethod: member.notificationMethod || 'line',
+        email1: member.email1 || '',
+        email2: member.email2 || '',
         status, // 'present', 'leaving_early', 'left'
         leavingTime,
         timestamp: new Date().toISOString()

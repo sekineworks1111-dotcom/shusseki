@@ -50,7 +50,7 @@ const AttendancePage = ({ members, setMembers }) => {
         ));
 
         // 6. Submit to backend
-        logAttendance(memberId, member.name, status, leavingTime);
+        logAttendance(member, status, leavingTime);
 
         // 7. Close modal
         setSelectedMember(null);
@@ -74,7 +74,7 @@ const AttendancePage = ({ members, setMembers }) => {
 
         // 3. Notify backend of Reversion
         const prev = undoState.previousMemberState;
-        logAttendance(prev.id, prev.name, prev.status, prev.leavingTime);
+        logAttendance(prev, prev.status, prev.leavingTime);
 
         // 4. Clear undo state
         setUndoState(null);

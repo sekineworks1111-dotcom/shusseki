@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { setGasUrl, getGasUrl } from '../services/GasApi';
-import { LayoutGrid, List, Save, User, QrCode, ArrowLeft } from 'lucide-react';
+import { LayoutGrid, List, Save, User, QrCode, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 const AdminDashboard = ({ members, setMembers }) => {
     const [gasUrl, setGasUrlState] = useState(getGasUrl());
@@ -27,6 +27,31 @@ const AdminDashboard = ({ members, setMembers }) => {
 
     const updateMemberField = (id, field, value) => {
         setMembers(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
+    };
+
+    const addMember = () => {
+        const newMember = {
+            id: `member-${Date.now()}`,
+            name: '',
+            ruby: '',
+            photoUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
+            status: 'pending',
+            leavingTime: null,
+            lineUserId: '',
+            notificationMethod: 'line',
+            email1: '',
+            email2: '',
+            notifyEntry: true,
+            notifyExit: true,
+            remarks: ''
+        };
+        setMembers(prev => [newMember, ...prev]);
+    };
+
+    const deleteMember = (id) => {
+        if (window.confirm('本当にこのメンバーを削除しますか？\nこの操作は取り消せません。')) {
+            setMembers(prev => prev.filter(m => m.id !== id));
+        }
     };
 
     // Generate LINE Deep Link
@@ -102,6 +127,12 @@ const AdminDashboard = ({ members, setMembers }) => {
                     </div>
                 </div>
 
+                <div style={{ marginBottom: '1rem' }}>
+                    <button onClick={addMember} className="btn-present" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }}>
+                        <Plus size={18} /> メンバーを追加
+                    </button>
+                </div>
+
                 {viewMode === 'list' ? (
                     /* List View */
                     <div style={{ overflowX: 'auto' }}>
@@ -110,7 +141,8 @@ const AdminDashboard = ({ members, setMembers }) => {
                                 <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
                                     <th style={{ padding: '0.5rem' }}>写真</th>
                                     <th style={{ padding: '0.5rem' }}>名前 (漢字/かな)</th>
-                                    <th style={{ padding: '0.5rem' }}>LINE連携</th>
+                                    <th style={{ padding: '0.5rem' }}>通知方法</th>
+                                    <th style={{ padding: '0.5rem' }}>LINE連携 / メールアドレス</th>
                                     <th style={{ padding: '0.5rem' }}>通知設定</th>
                                     <th style={{ padding: '0.5rem' }}>操作</th>
                                 </tr>
@@ -136,12 +168,43 @@ const AdminDashboard = ({ members, setMembers }) => {
                                             />
                                         </td>
                                         <td style={{ padding: '0.5rem' }}>
-                                            <input
-                                                value={member.lineUserId}
-                                                onChange={(e) => updateMemberField(member.id, 'lineUserId', e.target.value)}
-                                                placeholder="Uxxxxxxxx..."
-                                                style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem', fontFamily: 'monospace' }}
-                                            />
+                                            <select
+                                                value={member.notificationMethod}
+                                                onChange={(e) => updateMemberField(member.id, 'notificationMethod', e.target.value)}
+                                                style={{ padding: '0.3rem', borderRadius: '4px', border: '1px solid #ccc', width: '100%' }}
+                                            >
+                                                <option value="line">LINEのみ</option>
+                                                <option value="email">メールのみ</option>
+                                                <option value="both">LINEとメール</option>
+                                            </select>
+                                        </td>
+                                        <td style={{ padding: '0.5rem' }}>
+                                            <div style={{ marginBottom: '0.5rem' }}>
+                                                <input
+                                                    value={member.lineUserId}
+                                                    onChange={(e) => updateMemberField(member.id, 'lineUserId', e.target.value)}
+                                                    placeholder="LINE ID (Uxxxxxxxx...)"
+                                                    style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '0.2rem' }}
+                                                />
+                                            </div>
+                                            {(member.notificationMethod === 'email' || member.notificationMethod === 'both') && (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                                    <input
+                                                        type="email"
+                                                        value={member.email1}
+                                                        onChange={(e) => updateMemberField(member.id, 'email1', e.target.value)}
+                                                        placeholder="メールアドレス1"
+                                                        style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem' }}
+                                                    />
+                                                    <input
+                                                        type="email"
+                                                        value={member.email2}
+                                                        onChange={(e) => updateMemberField(member.id, 'email2', e.target.value)}
+                                                        placeholder="メールアドレス2"
+                                                        style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem' }}
+                                                    />
+                                                </div>
+                                            )}
                                         </td>
                                         <td style={{ padding: '0.5rem' }}>
                                             <label style={{ display: 'block', fontSize: '0.8rem' }}>
@@ -160,9 +223,14 @@ const AdminDashboard = ({ members, setMembers }) => {
                                             </label>
                                         </td>
                                         <td style={{ padding: '0.5rem' }}>
-                                            <button onClick={() => setShowQrFor(member)} className="btn-time" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                                <QrCode size={14} /> 連携
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                                                <button onClick={() => setShowQrFor(member)} className="btn-time" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                                                    <QrCode size={14} /> 連携QR
+                                                </button>
+                                                <button onClick={() => deleteMember(member.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center', background: '#ffebee', color: '#c62828', border: '1px solid #ffcdd2', borderRadius: '4px', cursor: 'pointer' }}>
+                                                    <Trash2 size={14} /> 削除
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
